@@ -1,0 +1,136 @@
+---
+title: "Tugas Kelompok 8 Analisis Regresi"
+author: "Tubagus Achmad Aditya - G1401221006,  Qonita Husnia Rahmah - G1401221008,
+  \ Sintong M.N Purba - G1401221077"
+date: "2024-02-10"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+library(rmarkdown)
+```
+
+# Membaca data csv
+```{r}
+data_tugas <- read.csv("C:/Users/Poerba/Downloads/Cities1.csv", sep = "," )
+head(data_tugas)
+```
+# Pendefinisian peubah yang digunakan
+
+Peubah yang digunakan adalah <b>kualitas udara (*air Quality*)</b> sebagai peubah penjelas X dan <b>polusi air (*water pollution*)</b> sebagai peubah respon Y, sehingga hubungan antara keduanya dapat dinyatakan dalam sebuah persamaan garis linear
+```{r}
+X<- data_tugas$AirQuality
+Y<- data_tugas$WaterPollution
+
+```
+# Pembentukan model regresi secara manual
+## Parameter regresi
+```{r}
+n<-nrow(data_tugas)
+n
+b1<-(sum(X*Y)-(sum(X)*sum(Y)/n))/(sum(X^2)-(sum(X)^2/n))
+b0<-mean(Y)-b1*mean(X)
+b1
+b0
+```
+
+Maka persamaan garis regresinya adalah <b>y = 68.08415 -0.3766663 x </b>. yang artinya jika kualitas udara meningkat 1 poin maka dugaan nilai polusi air akan turun sebesar b1 yaitu 0.3766663, dan saat kualitas udara bernilai 0 maka besar dugaan nilai polusi airnya adalah sebesar b0 yaitu 68.08415
+
+## Korelasi dan Koefisien determinasi 
+```{r}
+r<-(sum(X*Y)-sum(X)*sum(Y)/n)/sqrt((sum(X^2)-(sum(X)^2/n))*(sum(Y^2)-(sum(Y)^2/n)))
+r
+Koef_det<-r^2
+Koef_det
+```
+
+Didapatkan korelasi sebesar -0.4541726 yang artinya kualitas udara dan polusi air memiliki hubungan negatif yang cukup kecil, sedangkan koefisien keragamannya sebesar 0.2062728 yang menunjukkan bahwa kualitas udara hanya mampu menjelaskan keragaman pada nilai polusi air sebesar 0.2062728 atau 20.62728 %.
+
+# Uji hipotesis parameter regresi
+## Standar eror parameter regresi
+```{r}
+galat<-Y-(b0+b1*X)
+ragam_galat<-sum(galat^2)/(n-2)
+
+se_b1<-sqrt(ragam_galat/sum((X-mean(X))^2))
+se_b1
+
+se_b0<-sqrt(ragam_galat*(1/n+mean(X)^2/sum((X-mean(X))^2)))
+se_b0
+```
+## Hipotesis
+H0: b1=0 (tidak ada hubungan linear antara kualitas udara dan polusi air)
+H1: b1!=0 (terdapat hubungan linear antara kualitas udara dan polusi air)
+
+dan
+
+H0: b0=0 (Semua nilai polusi air dapat dijelaskan oleh kualitas udara)
+H1: b0!=0 (terdapat nilai polusi air yang tidak dapat dijelaskan oleh kualitas udara)
+
+## Uji t
+```{r}
+t_b1<-b1/se_b1
+t_b1
+
+t_b0<-b0/se_b0
+t_b0
+
+qt(0.025, df = n-2, lower.tail = FALSE) 
+```
+Untuk b1 : karena |t-hit(b1)|=|-32.08394|>= t tabel= 1.960563, maka tolak H0 sehingga cukup bukti untuk menyatakan terdapat hubungan linear antara kualitas udara dan polusi air.
+
+Untuk b0 : karena |t-hit(b0)|=|83.42118|>= t tabel= 1.960563, maka tolak H0 sehingga cukup bukti untuk menyatakan terdapat nilai polusi air yang tidak dapat dijelaskan oleh kualitas udara.
+
+## Ukuran keragaman
+```{r}
+galat<-Y-(b0+b1*X)
+
+JKG <- sum((Y - (b0+b1*X))^2)
+JKG
+JKReg <- sum(((b0+b1*X)- mean(Y))^2)
+JKReg
+JKT <- sum((Y - mean(Y))^2)
+JKT
+JKT2 <- JKReg+JKG
+JKT2
+
+dbReg<-1
+dbg<-n-2
+dbt<-n-1
+
+Fhit<-(JKReg/dbReg)/(JKG/dbg)
+Fhit
+
+P.value<-1-pf(Fhit, dbReg, dbg, lower.tail <- F)
+P.value
+```
+# Pembentukan model regresi menggunakan fungsi lm
+model regresi juga dapat dibentuk secara langsung menggunakan fungsi lm
+```{r}
+model<-lm(Y~X,data_tugas<-data_tugas)
+summary(model)
+```
+## Anova dari model
+```{r}
+anova(model)
+```
+
+# Penentuan selang kepercayaan parameter model regresi
+## Selang kepercayaan b0
+```{r}
+#Batas bawah b0, batas atas b0
+Sk_b0<-c(b0 - abs(qt(0.025, df=n-2))*se_b0,b0 + abs(qt(0.025, df=n-2))*se_b0)
+Sk_b0
+```
+Maka nilai b0 pada taraf kepercayaan 0.05 akan jatuh pada selang <b>[66.48404 , 69.68426]</b>
+
+## Selang kepercayaan b1
+
+```{r}
+#Batas bawah b1, batas atas b1
+Sk_b1<-c(b1 - abs(qt(0.025, df=n-2))*se_b1,b1 + abs(qt(0.025, df=n-2))*se_b1)
+Sk_b1
+```
+Maka nilai b1 pada taraf kepercayaan 0.05 akan jatuh pada selang <b>[-0.3996833 , -0.3536492]</b>
+
